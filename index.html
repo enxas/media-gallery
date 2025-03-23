@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Media Viewer</title>
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+
+		body {
+			font-family: Arial, sans-serif;
+			background-color: #1a1a1a;
+			color: #fff;
+			overflow: hidden;
+			height: 100vh;
+			display: flex;
+			flex-direction: column;
+		}
+
+		.header {
+			padding: 12px;
+			background-color: #333;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			transition: all 0.3s ease;
+			height: 50px;
+		}
+
+		.header h1 {
+			font-size: 18px;
+		}
+
+		#file-input {
+			display: none;
+		}
+
+		.select-folder {
+			background-color: #4CAF50;
+			color: white;
+			padding: 8px 16px;
+			border: none;
+			border-radius: 4px;
+			cursor: pointer;
+		}
+
+		.fullscreen-btn {
+			background-color: #007BFF;
+			color: white;
+			width: 34px;
+			height: 34px;
+			border: none;
+			border-radius: 4px;
+			cursor: pointer;
+			margin-left: 10px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		.fullscreen-icon {
+			width: 16px;
+			height: 16px;
+		}
+
+		.viewer-container {
+			flex-grow: 1;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			position: relative;
+			overflow: auto;
+			transition: all 0.3s ease;
+		}
+
+		.fullscreen-mode .viewer-container {
+			overflow: hidden;
+			height: 100vh;
+			/* Take up full viewport height in fullscreen mode */
+		}
+
+		.media-container {
+			height: 100%;
+			width: 100%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 20px;
+			transition: all 0.3s ease;
+		}
+
+		.fullscreen-mode .media-container {
+			padding: 0;
+		}
+
+		.media-item {
+			width: 100%;
+			max-height: calc(100vh - 100px);
+			/* Account for header and status bar */
+			object-fit: contain;
+			transition: all 0.3s ease;
+		}
+
+		.fullscreen-mode .media-item {
+			max-height: 100vh;
+			/* Use full viewport height in fullscreen */
+		}
+
+		/* Ensure video controls are always shown */
+		video.media-item {
+			z-index: 5;
+		}
+
+		/* Always force controls to be visible, even in fullscreen */
+		video.media-item::-webkit-media-controls {
+			display: flex !important;
+			opacity: 1 !important;
+			visibility: visible !important;
+		}
+
+		video.media-item::-webkit-media-controls-enclosure {
+			display: flex !important;
+			opacity: 1 !important;
+			visibility: visible !important;
+		}
+
+		.fullscreen-mode .header,
+		.fullscreen-mode .status-bar {
+			height: 0;
+			padding: 0;
+			overflow: hidden;
+			opacity: 0;
+		}
+
+		.nav-arrow {
+			position: fixed;
+			top: 50%;
+			transform: translateY(-50%);
+			background-color: rgba(0, 0, 0, 0.5);
+			color: white;
+			font-size: 24px;
+			width: 50px;
+			height: 50px;
+			border-radius: 50%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			cursor: pointer;
+			transition: opacity 0.3s, background-color 0.3s;
+			z-index: 10;
+		}
+
+		.nav-arrow:hover {
+			background-color: rgba(0, 0, 0, 0.8);
+		}
+
+		.fullscreen-mode .nav-arrow {
+			opacity: 0;
+		}
+
+		.fullscreen-mode .viewer-container:hover .nav-arrow {
+			opacity: 1;
+		}
+
+		.nav-prev {
+			left: 20px;
+		}
+
+		.nav-next {
+			right: 20px;
+		}
+
+		.status-bar {
+			background-color: #333;
+			padding: 8px 16px;
+			display: flex;
+			justify-content: space-between;
+			transition: all 0.3s ease;
+			height: 50px;
+		}
+
+		.file-info {
+			font-size: 14px;
+			display: flex;
+			align-items: center;
+		}
+
+		.fullscreen-hint {
+			margin-left: 15px;
+			background-color: #444;
+			padding: 2px 8px;
+			border-radius: 4px;
+			font-size: 12px;
+		}
+
+		.fullscreen-hint kbd {
+			background-color: #555;
+			padding: 1px 5px;
+			border-radius: 3px;
+			margin: 0 2px;
+		}
+
+		.file-counter {
+			font-size: 14px;
+		}
+
+		.no-media {
+			font-size: 18px;
+			color: #ccc;
+		}
+
+		/* Fullscreen exit button that shows in fullscreen mode */
+		.exit-fullscreen {
+			position: fixed;
+			top: 20px;
+			right: 20px;
+			background-color: rgba(0, 0, 0, 0.5);
+			color: white;
+			width: 40px;
+			height: 40px;
+			border-radius: 50%;
+			display: none;
+			align-items: center;
+			justify-content: center;
+			cursor: pointer;
+			z-index: 20;
+			transition: opacity 0.3s;
+		}
+
+		.fullscreen-mode .exit-fullscreen {
+			display: flex;
+			opacity: 0;
+		}
+
+		.fullscreen-mode .viewer-container:hover .exit-fullscreen {
+			opacity: 1;
+		}
+
+		/* Custom video control container to ensure they always show in fullscreen */
+		.video-wrapper {
+			position: relative;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 100%;
+			max-height: calc(100vh - 100px);
+		}
+
+		.fullscreen-mode .video-wrapper {
+			max-height: 100vh;
+		}
+
+		video::-webkit-media-controls-panel {
+			display: flex !important;
+			opacity: 1 !important;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="header">
+		<h1>Media Viewer</h1>
+		<div style="display: flex; align-items: center;">
+			<input type="file" id="file-input" webkitdirectory directory multiple />
+			<button class="select-folder" id="folder-select-btn">Select Folder</button>
+			<button class="fullscreen-btn" id="fullscreen-btn" title="Toggle fullscreen (F)">
+				<svg class="fullscreen-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+					<path
+						d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3">
+					</path>
+				</svg>
+			</button>
+		</div>
+	</div>
+
+	<div class="viewer-container">
+		<div class="media-container" id="media-container">
+			<div class="no-media">Select a folder to view media files</div>
+		</div>
+		<div class="nav-arrow nav-prev" id="prev-btn">←</div>
+		<div class="nav-arrow nav-next" id="next-btn">→</div>
+		<div class="exit-fullscreen" id="exit-fullscreen">✕</div>
+	</div>
+
+	<div class="status-bar">
+		<div class="file-info" id="file-info">
+			No file selected
+			<span class="fullscreen-hint">Press <kbd>F</kbd> for fullscreen mode</span>
+		</div>
+		<div class="file-counter" id="file-counter">0/0</div>
+	</div>
+
+	<script>
+		// Global variables
+		let mediaFiles = []
+		let currentIndex = 0
+		let currentVolume = 1.0
+		let isFullscreen = false
+
+		// DOM elements
+		const body = document.body
+		const folderSelectBtn = document.getElementById('folder-select-btn')
+		const fileInput = document.getElementById('file-input')
+		const mediaContainer = document.getElementById('media-container')
+		const prevBtn = document.getElementById('prev-btn')
+		const nextBtn = document.getElementById('next-btn')
+		const fileInfo = document.getElementById('file-info')
+		const fileCounter = document.getElementById('file-counter')
+		const fullscreenBtn = document.getElementById('fullscreen-btn')
+		const exitFullscreenBtn = document.getElementById('exit-fullscreen')
+
+		// Supported file types
+		const supportedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp']
+		const supportedVideoTypes = ['video/mp4', 'video/webm', 'video/ogg']
+
+		// Event listeners
+		folderSelectBtn.addEventListener('click', () => fileInput.click())
+		fileInput.addEventListener('change', handleFolderSelect)
+		prevBtn.addEventListener('click', showPreviousMedia)
+		nextBtn.addEventListener('click', showNextMedia)
+		document.addEventListener('keydown', handleKeyNavigation)
+		fullscreenBtn.addEventListener('click', toggleFullscreen)
+		exitFullscreenBtn.addEventListener('click', exitFullscreen)
+
+		// Hide navigation buttons initially
+		prevBtn.style.display = 'none'
+		nextBtn.style.display = 'none'
+
+		function handleFolderSelect(event) {
+			const files = Array.from(event.target.files)
+
+			// Filter only supported media files
+			mediaFiles = files.filter(file => {
+				return supportedImageTypes.includes(file.type) || supportedVideoTypes.includes(file.type)
+			})
+
+			if (mediaFiles.length > 0) {
+				currentIndex = 0
+				showMedia(currentIndex)
+				prevBtn.style.display = 'flex'
+				nextBtn.style.display = 'flex'
+			} else {
+				mediaContainer.innerHTML = '<div class="no-media">No supported media files found in the selected folder</div>'
+				fileInfo.innerHTML = 'No supported files found <span class="fullscreen-hint">Press <kbd>F</kbd> for fullscreen mode</span>'
+				fileCounter.textContent = '0/0'
+				prevBtn.style.display = 'none'
+				nextBtn.style.display = 'none'
+			}
+		}
+
+		function showMedia(index) {
+			if (mediaFiles.length === 0) return
+
+			const file = mediaFiles[index]
+			const fileURL = URL.createObjectURL(file)
+
+			// Save current volume if a video is playing
+			const currentVideoElement = document.querySelector('video.media-item')
+			if (currentVideoElement) {
+				currentVolume = currentVideoElement.volume
+			}
+
+			mediaContainer.innerHTML = ''
+
+			if (supportedImageTypes.includes(file.type)) {
+				const img = document.createElement('img')
+				img.src = fileURL
+				img.className = 'media-item'
+				mediaContainer.appendChild(img)
+			} else if (supportedVideoTypes.includes(file.type)) {
+				// Create a wrapper div for the video
+				const videoWrapper = document.createElement('div')
+				videoWrapper.className = 'video-wrapper'
+
+				const video = document.createElement('video')
+				video.src = fileURL
+				video.className = 'media-item'
+				video.controls = true
+				video.autoplay = true
+
+				// Force controls to always show
+				video.setAttribute('controlslist', 'nodownload')
+				video.setAttribute('disablePictureInPicture', '')
+
+				// Critical - ensure controls are ALWAYS shown
+				video.setAttribute('controls', 'controls')
+
+				// Apply the saved volume level
+				video.volume = currentVolume
+
+				// Add volume change listener to update currentVolume
+				video.addEventListener('volumechange', function () {
+					currentVolume = this.volume
+				})
+
+				// Prevent controls from hiding when in fullscreen mode
+				video.addEventListener('fullscreenchange', function () {
+					if (document.fullscreenElement) {
+						video.controls = true
+					}
+				})
+
+				videoWrapper.appendChild(video)
+				mediaContainer.appendChild(videoWrapper)
+			}
+
+			// Update info displays
+			fileInfo.innerHTML = `${file.name} <span class="fullscreen-hint">Press <kbd>F</kbd> for fullscreen mode</span>`
+			fileCounter.textContent = `${index + 1}/${mediaFiles.length}`
+		}
+
+		function showNextMedia() {
+			if (mediaFiles.length === 0) return
+
+			currentIndex = (currentIndex + 1) % mediaFiles.length
+			showMedia(currentIndex)
+		}
+
+		function showPreviousMedia() {
+			if (mediaFiles.length === 0) return
+
+			currentIndex = (currentIndex - 1 + mediaFiles.length) % mediaFiles.length
+			showMedia(currentIndex)
+		}
+
+		function toggleFullscreen() {
+			isFullscreen = !isFullscreen
+			updateFullscreenMode()
+		}
+
+		function exitFullscreen() {
+			isFullscreen = false
+			updateFullscreenMode()
+		}
+
+		function updateFullscreenMode() {
+			if (isFullscreen) {
+				body.classList.add('fullscreen-mode')
+
+				// Update fullscreen icon to show exit icon
+				fullscreenBtn.innerHTML = `
+                <svg class="fullscreen-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
+                </svg>`
+
+				// Ensure video controls remain visible in fullscreen
+				const videoElement = document.querySelector('video.media-item')
+				if (videoElement) {
+					// Force controls to always show
+					videoElement.controls = true
+				}
+			} else {
+				body.classList.remove('fullscreen-mode')
+
+				// Update fullscreen icon to show enter fullscreen icon
+				fullscreenBtn.innerHTML = `
+                <svg class="fullscreen-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+                </svg>`
+			}
+		}
+
+		function handleKeyNavigation(event) {
+			if (event.key === 'ArrowRight') {
+				showNextMedia()
+			} else if (event.key === 'ArrowLeft') {
+				showPreviousMedia()
+			} else if (event.key.toLowerCase() === 'f') {
+				toggleFullscreen()
+			} else if (event.key === 'Escape' && isFullscreen) {
+				exitFullscreen()
+			}
+		}
+	</script>
+</body>
+
+</html>
