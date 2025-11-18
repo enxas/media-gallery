@@ -36,6 +36,26 @@
 			font-size: 18px;
 		}
 
+		.header-left {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+		}
+
+		.back-btn {
+			background-color: #666;
+			color: white;
+			padding: 8px 16px;
+			border: none;
+			border-radius: 4px;
+			cursor: pointer;
+			display: none;
+		}
+
+		.back-btn:hover {
+			background-color: #777;
+		}
+
 		#file-input {
 			display: none;
 		}
@@ -81,7 +101,6 @@
 		.fullscreen-mode .viewer-container {
 			overflow: hidden;
 			height: 100vh;
-			/* Take up full viewport height in fullscreen mode */
 		}
 
 		.media-container {
@@ -101,14 +120,166 @@
 		.media-item {
 			width: 100%;
 			max-height: calc(100vh - 100px);
-			/* Account for header and status bar */
 			object-fit: contain;
 			transition: all 0.3s ease;
 		}
 
 		.fullscreen-mode .media-item {
 			max-height: 100vh;
-			/* Use full viewport height in fullscreen */
+		}
+
+		/* Folder list styles */
+		.folder-list-container {
+			height: 100%;
+			width: 100%;
+			padding: 20px;
+			overflow-y: auto;
+		}
+
+		.folder-list {
+			max-width: 1200px;
+			margin: 0 auto;
+		}
+
+		.folder-list h2 {
+			margin-bottom: 30px;
+			color: #fff;
+			text-align: center;
+		}
+
+		.folder-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+			gap: 20px;
+			padding: 0 10px;
+		}
+
+		.folder-item {
+			background-color: #333;
+			border-radius: 12px;
+			cursor: pointer;
+			transition: all 0.3s ease;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			padding: 25px 15px;
+			text-align: center;
+			aspect-ratio: 1;
+			min-height: 200px;
+		}
+
+		.folder-item:hover {
+			background-color: #444;
+			transform: translateY(-2px);
+			box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+		}
+
+		.folder-icon {
+			width: 48px;
+			height: 48px;
+			fill: #4CAF50;
+			margin-bottom: 15px;
+		}
+
+		.folder-info {
+			width: 100%;
+		}
+
+		.folder-name {
+			font-size: 16px;
+			font-weight: bold;
+			margin-bottom: 8px;
+			word-wrap: break-word;
+			line-height: 1.3;
+		}
+
+		.folder-count {
+			font-size: 13px;
+			color: #ccc;
+		}
+
+		/* Loading screen styles */
+		.loading-container {
+			height: 100%;
+			width: 100%;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			text-align: center;
+		}
+
+		.loading-spinner {
+			width: 60px;
+			height: 60px;
+			border: 4px solid #333;
+			border-top: 4px solid #4CAF50;
+			border-radius: 50%;
+			animation: spin 1s linear infinite;
+			margin-bottom: 20px;
+		}
+
+		@keyframes spin {
+			0% { transform: rotate(0deg); }
+			100% { transform: rotate(360deg); }
+		}
+
+		.loading-text {
+			font-size: 18px;
+			color: #fff;
+			margin-bottom: 10px;
+		}
+
+		.loading-progress {
+			font-size: 14px;
+			color: #ccc;
+		}
+
+		.progress-bar-container {
+			width: 300px;
+			height: 8px;
+			background-color: #333;
+			border-radius: 4px;
+			margin: 15px 0;
+			overflow: hidden;
+		}
+
+		.progress-bar {
+			height: 100%;
+			background-color: #4CAF50;
+			width: 0%;
+			transition: width 0.3s ease;
+		}
+
+		/* Sort controls */
+		.sort-controls {
+			display: flex;
+			align-items: center;
+			gap: 15px;
+			margin-bottom: 20px;
+			justify-content: center;
+			flex-wrap: wrap;
+		}
+
+		.sort-label {
+			color: #fff;
+			font-size: 14px;
+		}
+
+		.sort-select {
+			background-color: #333;
+			color: #fff;
+			border: 1px solid #555;
+			border-radius: 4px;
+			padding: 8px 12px;
+			font-size: 14px;
+			cursor: pointer;
+		}
+
+		.sort-select:focus {
+			outline: none;
+			border-color: #4CAF50;
 		}
 
 		/* Ensure video controls are always shown */
@@ -116,7 +287,6 @@
 			z-index: 5;
 		}
 
-		/* Always force controls to be visible, even in fullscreen */
 		video.media-item::-webkit-media-controls {
 			display: flex !important;
 			opacity: 1 !important;
@@ -212,9 +382,9 @@
 		.no-media {
 			font-size: 18px;
 			color: #ccc;
+			text-align: center;
 		}
 
-		/* Fullscreen exit button that shows in fullscreen mode */
 		.exit-fullscreen {
 			position: fixed;
 			top: 20px;
@@ -241,7 +411,6 @@
 			opacity: 1;
 		}
 
-		/* Custom video control container to ensure they always show in fullscreen */
 		.video-wrapper {
 			position: relative;
 			display: flex;
@@ -264,10 +433,13 @@
 
 <body>
 	<div class="header">
-		<h1>Media Viewer</h1>
+		<div class="header-left">
+			<button class="back-btn" id="back-btn">← Back</button>
+			<h1>Media Viewer</h1>
+		</div>
 		<div style="display: flex; align-items: center;">
 			<input type="file" id="file-input" webkitdirectory directory multiple />
-			<button class="select-folder" id="folder-select-btn">Select Folder</button>
+			<button class="select-folder" id="folder-select-btn">Select Root Folder</button>
 			<button class="fullscreen-btn" id="fullscreen-btn" title="Toggle fullscreen (F)">
 				<svg class="fullscreen-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 					<path
@@ -280,7 +452,7 @@
 
 	<div class="viewer-container">
 		<div class="media-container" id="media-container">
-			<div class="no-media">Select a folder to view media files</div>
+			<div class="no-media">Select a root folder to view media folders</div>
 		</div>
 		<div class="nav-arrow nav-prev" id="prev-btn">←</div>
 		<div class="nav-arrow nav-next" id="next-btn">→</div>
@@ -289,18 +461,25 @@
 
 	<div class="status-bar">
 		<div class="file-info" id="file-info">
-			No file selected
+			No folder selected
 			<span class="fullscreen-hint">Press <kbd>F</kbd> for fullscreen mode</span>
 		</div>
 		<div class="file-counter" id="file-counter">0/0</div>
 	</div>
 
 	<script>
+document.addEventListener('DOMContentLoaded', () => {
 		// Global variables
-		let mediaFiles = []
+		let allFiles = []
+		let mediaFolders = new Map()
+		let currentMediaFiles = []
 		let currentIndex = 0
 		let currentVolume = 1.0
 		let isFullscreen = false
+		let currentView = 'initial' // 'initial', 'loading', 'folder-list', 'media-view'
+		let currentFolderName = ''
+		let currentSortMethod = 'name'
+		let loadingProgress = { current: 0, total: 0 }
 
 		// DOM elements
 		const body = document.body
@@ -313,6 +492,7 @@
 		const fileCounter = document.getElementById('file-counter')
 		const fullscreenBtn = document.getElementById('fullscreen-btn')
 		const exitFullscreenBtn = document.getElementById('exit-fullscreen')
+		const backBtn = document.getElementById('back-btn')
 
 		// Supported file types
 		const supportedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp']
@@ -320,9 +500,10 @@
 
 		// Event listeners
 		folderSelectBtn.addEventListener('click', () => fileInput.click())
-		fileInput.addEventListener('change', handleFolderSelect)
+		fileInput.addEventListener('change', handleRootFolderSelect)
 		prevBtn.addEventListener('click', showPreviousMedia)
 		nextBtn.addEventListener('click', showNextMedia)
+		backBtn.addEventListener('click', goBack)
 		document.addEventListener('keydown', handleKeyNavigation)
 		fullscreenBtn.addEventListener('click', toggleFullscreen)
 		exitFullscreenBtn.addEventListener('click', exitFullscreen)
@@ -331,32 +512,234 @@
 		prevBtn.style.display = 'none'
 		nextBtn.style.display = 'none'
 
-		function handleFolderSelect(event) {
+		function handleRootFolderSelect(event) {
 			const files = Array.from(event.target.files)
+			allFiles = files
 
-			// Filter only supported media files
-			mediaFiles = files.filter(file => {
-				return supportedImageTypes.includes(file.type) || supportedVideoTypes.includes(file.type)
+			// Show loading screen
+			showLoadingScreen()
+
+			// Process files asynchronously with progress updates
+			processFilesAsync(files)
+		}
+
+		function showLoadingScreen() {
+			currentView = 'loading'
+			backBtn.style.display = 'none'
+			prevBtn.style.display = 'none'
+			nextBtn.style.display = 'none'
+
+			mediaContainer.innerHTML = `
+				<div class="loading-container">
+					<div class="loading-spinner"></div>
+					<div class="loading-text">Loading Media Folders...</div>
+					<div class="progress-bar-container">
+						<div class="progress-bar" id="progress-bar"></div>
+					</div>
+					<div class="loading-progress" id="loading-progress">0 folders processed</div>
+				</div>
+			`
+
+			fileInfo.innerHTML = 'Processing folders... <span class="fullscreen-hint">Press <kbd>F</kbd> for fullscreen mode</span>'
+			fileCounter.textContent = 'Loading...'
+		}
+
+		async function processFilesAsync(files) {
+			mediaFolders.clear()
+			loadingProgress.current = 0
+			
+			// First pass: identify unique folders
+			const folderSet = new Set()
+			files.forEach(file => {
+				const pathParts = file.webkitRelativePath.split('/')
+				if (pathParts.length > 1) {
+					const folderName = pathParts[1] || pathParts[0]
+					folderSet.add(folderName)
+				}
 			})
 
-			if (mediaFiles.length > 0) {
-				currentIndex = 0
-				showMedia(currentIndex)
-				prevBtn.style.display = 'flex'
-				nextBtn.style.display = 'flex'
+			loadingProgress.total = folderSet.size
+			const folderStats = new Map() // Store folder metadata
+
+			// Process files in batches to avoid blocking UI
+			const batchSize = 50
+			let processedFiles = 0
+
+			for (let i = 0; i < files.length; i += batchSize) {
+				const batch = files.slice(i, i + batchSize)
+				
+				// Process batch
+				batch.forEach(file => {
+					const pathParts = file.webkitRelativePath.split('/')
+					if (pathParts.length > 1) {
+						const folderName = pathParts[1] || pathParts[0]
+						
+						// Only include supported media files
+						if (supportedImageTypes.includes(file.type) || supportedVideoTypes.includes(file.type)) {
+							if (!mediaFolders.has(folderName)) {
+								mediaFolders.set(folderName, [])
+								
+								// Try to get folder metadata from first file
+								if (!folderStats.has(folderName)) {
+									folderStats.set(folderName, {
+										name: folderName,
+										lastModified: file.lastModified || 0
+									})
+								}
+							}
+							mediaFolders.get(folderName).push(file)
+						}
+					}
+				})
+
+				processedFiles += batch.length
+				loadingProgress.current = Math.floor((processedFiles / files.length) * folderSet.size)
+				
+				// Update progress
+				updateLoadingProgress()
+				
+				// Allow UI to update
+				await new Promise(resolve => setTimeout(resolve, 10))
+			}
+
+			// Store folder metadata for sorting
+			for (let [folderName, files] of mediaFolders.entries()) {
+				if (files.length === 0) {
+					mediaFolders.delete(folderName)
+					folderStats.delete(folderName)
+				} else {
+					// Use the most recent file's lastModified as folder date
+					const mostRecentFile = files.reduce((latest, current) => 
+						current.lastModified > latest.lastModified ? current : latest
+					)
+					folderStats.get(folderName).lastModified = mostRecentFile.lastModified
+				}
+			}
+
+			// Store folder stats globally for sorting
+			window.folderStats = folderStats
+
+			if (mediaFolders.size > 0) {
+				showFolderList()
 			} else {
-				mediaContainer.innerHTML = '<div class="no-media">No supported media files found in the selected folder</div>'
-				fileInfo.innerHTML = 'No supported files found <span class="fullscreen-hint">Press <kbd>F</kbd> for fullscreen mode</span>'
-				fileCounter.textContent = '0/0'
-				prevBtn.style.display = 'none'
-				nextBtn.style.display = 'none'
+				showNoMediaMessage()
+			}
+		}
+
+		function updateLoadingProgress() {
+			const progressBar = document.getElementById('progress-bar')
+			const progressText = document.getElementById('loading-progress')
+			
+			if (progressBar && progressText) {
+				const percentage = Math.min(100, (loadingProgress.current / loadingProgress.total) * 100)
+				progressBar.style.width = percentage + '%'
+				progressText.textContent = `${loadingProgress.current}/${loadingProgress.total} folders processed`
+			}
+		}
+
+		function showFolderList() {
+			currentView = 'folder-list'
+			backBtn.style.display = 'none'
+			prevBtn.style.display = 'none'
+			nextBtn.style.display = 'none'
+
+			let folderListHTML = `
+				<div class="folder-list-container">
+					<div class="folder-list">
+						<div class="sort-controls">
+							<span class="sort-label">Sort by:</span>
+							<select class="sort-select" onchange="changeSortMethod()">
+								<option value="name">Name</option>
+								<option value="date">Date</option>
+							</select>
+						</div>
+
+						<h2>Select a Media Folder</h2>
+			`
+
+			folderListHTML += `
+				<div class="folder-grid">
+			`
+
+			for (let [folderName, files] of mediaFolders.entries()) {
+				const mediaCount = files.length
+				const mediaText = mediaCount === 1 ? 'media file' : 'media files'
+				
+				folderListHTML += `
+					<div class="folder-item" onclick="selectMediaFolder('${folderName}')">
+						<svg class="folder-icon" viewBox="0 0 24 24">
+							<path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z"/>
+						</svg>
+						<div class="folder-info">
+							<div class="folder-name">${folderName}</div>
+							<div class="folder-count">${mediaCount} ${mediaText}</div>
+						</div>
+					</div>
+				`
+			}
+
+			folderListHTML += `
+				</div>
+			`
+
+			folderListHTML += `
+					</div>
+				</div>
+			`
+
+			mediaContainer.innerHTML = folderListHTML
+			fileInfo.innerHTML = `${mediaFolders.size} media folders found <span class="fullscreen-hint">Press <kbd>F</kbd> for fullscreen mode</span>`
+			fileCounter.textContent = `${mediaFolders.size} folders`
+		}
+
+		function selectMediaFolder(folderName) {
+			currentFolderName = folderName
+			currentMediaFiles = mediaFolders.get(folderName) || []
+			currentIndex = 0
+			currentView = 'media-view'
+			
+			backBtn.style.display = 'block'
+			prevBtn.style.display = 'flex'
+			nextBtn.style.display = 'flex'
+
+			showMedia(currentIndex)
+		}
+		
+		function changeSortMethod() {
+			const selectElement = event.target;
+	
+			currentSortMethod = selectElement.value;
+			
+			console.log(currentSortMethod)
+
+			const sortedEntries = Array.from(mediaFolders.entries());
+
+			if (currentSortMethod === 'name') {
+				sortedEntries.sort(([a], [b]) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+			} else if (currentSortMethod === 'date') {
+				sortedEntries.sort(([a], [b]) => {
+					const dateA = window.folderStats.get(a)?.lastModified || 0;
+					const dateB = window.folderStats.get(b)?.lastModified || 0;
+					return dateB - dateA;
+				});
+			}
+
+			// Rebuild mediaFolders in sorted order
+			mediaFolders = new Map(sortedEntries);
+			showFolderList();
+		}
+
+
+		function goBack() {
+			if (currentView === 'media-view') {
+				showFolderList()
 			}
 		}
 
 		function showMedia(index) {
-			if (mediaFiles.length === 0) return
+			if (currentMediaFiles.length === 0) return
 
-			const file = mediaFiles[index]
+			const file = currentMediaFiles[index]
 			const fileURL = URL.createObjectURL(file)
 
 			// Save current volume if a video is playing
@@ -373,7 +756,6 @@
 				img.className = 'media-item'
 				mediaContainer.appendChild(img)
 			} else if (supportedVideoTypes.includes(file.type)) {
-				// Create a wrapper div for the video
 				const videoWrapper = document.createElement('div')
 				videoWrapper.className = 'video-wrapper'
 
@@ -383,22 +765,16 @@
 				video.controls = true
 				video.autoplay = true
 
-				// Force controls to always show
 				video.setAttribute('controlslist', 'nodownload')
 				video.setAttribute('disablePictureInPicture', '')
-
-				// Critical - ensure controls are ALWAYS shown
 				video.setAttribute('controls', 'controls')
 
-				// Apply the saved volume level
 				video.volume = currentVolume
 
-				// Add volume change listener to update currentVolume
 				video.addEventListener('volumechange', function () {
 					currentVolume = this.volume
 				})
 
-				// Prevent controls from hiding when in fullscreen mode
 				video.addEventListener('fullscreenchange', function () {
 					if (document.fullscreenElement) {
 						video.controls = true
@@ -410,21 +786,32 @@
 			}
 
 			// Update info displays
-			fileInfo.innerHTML = `${file.name} <span class="fullscreen-hint">Press <kbd>F</kbd> for fullscreen mode</span>`
-			fileCounter.textContent = `${index + 1}/${mediaFiles.length}`
+			fileInfo.innerHTML = `${currentFolderName}/${file.name} <span class="fullscreen-hint">Press <kbd>F</kbd> for fullscreen mode</span>`
+			fileCounter.textContent = `${index + 1}/${currentMediaFiles.length}`
+		}
+
+		function showNoMediaMessage() {
+			currentView = 'initial'
+			backBtn.style.display = 'none'
+			prevBtn.style.display = 'none'
+			nextBtn.style.display = 'none'
+			
+			mediaContainer.innerHTML = '<div class="no-media">No supported media files found in the selected folders</div>'
+			fileInfo.innerHTML = 'No supported files found <span class="fullscreen-hint">Press <kbd>F</kbd> for fullscreen mode</span>'
+			fileCounter.textContent = '0/0'
 		}
 
 		function showNextMedia() {
-			if (mediaFiles.length === 0) return
+			if (currentMediaFiles.length === 0) return
 
-			currentIndex = (currentIndex + 1) % mediaFiles.length
+			currentIndex = (currentIndex + 1) % currentMediaFiles.length
 			showMedia(currentIndex)
 		}
 
 		function showPreviousMedia() {
-			if (mediaFiles.length === 0) return
+			if (currentMediaFiles.length === 0) return
 
-			currentIndex = (currentIndex - 1 + mediaFiles.length) % mediaFiles.length
+			currentIndex = (currentIndex - 1 + currentMediaFiles.length) % currentMediaFiles.length
 			showMedia(currentIndex)
 		}
 
@@ -442,22 +829,18 @@
 			if (isFullscreen) {
 				body.classList.add('fullscreen-mode')
 
-				// Update fullscreen icon to show exit icon
 				fullscreenBtn.innerHTML = `
                 <svg class="fullscreen-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
                 </svg>`
 
-				// Ensure video controls remain visible in fullscreen
 				const videoElement = document.querySelector('video.media-item')
 				if (videoElement) {
-					// Force controls to always show
 					videoElement.controls = true
 				}
 			} else {
 				body.classList.remove('fullscreen-mode')
 
-				// Update fullscreen icon to show enter fullscreen icon
 				fullscreenBtn.innerHTML = `
                 <svg class="fullscreen-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
@@ -466,16 +849,29 @@
 		}
 
 		function handleKeyNavigation(event) {
-			if (event.key === 'ArrowRight') {
-				showNextMedia()
-			} else if (event.key === 'ArrowLeft') {
-				showPreviousMedia()
-			} else if (event.key.toLowerCase() === 'f') {
+			if (currentView === 'media-view') {
+				if (event.key === 'ArrowRight') {
+					showNextMedia()
+				} else if (event.key === 'ArrowLeft') {
+					showPreviousMedia()
+				}
+			}
+			
+			if (event.key.toLowerCase() === 'f') {
 				toggleFullscreen()
-			} else if (event.key === 'Escape' && isFullscreen) {
-				exitFullscreen()
+			} else if (event.key === 'Escape') {
+				if (isFullscreen) {
+					exitFullscreen()
+				} else if (currentView === 'media-view') {
+					goBack()
+				}
 			}
 		}
+
+		// Make functions available globally for onclick handlers
+		window.selectMediaFolder = selectMediaFolder
+		window.changeSortMethod = changeSortMethod
+});
 	</script>
 </body>
 
