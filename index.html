@@ -727,6 +727,12 @@ document.addEventListener('DOMContentLoaded', () => {
 			// Rebuild mediaFolders in sorted order
 			mediaFolders = new Map(sortedEntries);
 			showFolderList();
+			
+			// Restore the selected sort option after rebuilding the list
+			const newSelectElement = document.querySelector('.sort-select');
+			if (newSelectElement) {
+				newSelectElement.value = currentSortMethod;
+			}
 		}
 
 
